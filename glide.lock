@@ -1,0 +1,15 @@
+hash: 2ef081a76a56f964cda7bd548eb10f90693e591680220ad1e6ee5dcada3e5d19
+updated: 2016-11-27T17:56:18.243205772Z
+imports:
+- name: github.com/Sirupsen/logrus
+  version: d26492970760ca5d33129d2d799e34be5c4782eb
+- name: github.com/vulcand/oxy
+  version: 9d07313adea3bb9c7817ea887df6ac79648675f9
+  subpackages:
+  - forward
+  - utils
+- name: golang.org/x/sys
+  version: 9c60d1c508f5134d1ca726b4641db998f2523357
+  subpackages:
+  - unix
+testImports: []
