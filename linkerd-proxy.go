@@ -19,6 +19,14 @@ type HeaderRewriter struct {
 }
 
 func (r *HeaderRewriter) Rewrite(req *http.Request) {
+	// Run all the original header rewriter stuff
+	h, err := os.Hostname()
+	if err != nil {
+		h = "localhost"
+	}
+	origRewriter := &forward.HeaderRewriter{TrustForwardHeader: true, Hostname: h}
+	origRewriter.Rewrite(req)
+
 	// Get all headers
 	for name, _ := range req.Header {
 		// clear off 'l5d-ctx-*' 'l5d-dtab' 'l5d-sample'
@@ -33,7 +41,7 @@ func (r *HeaderRewriter) Rewrite(req *http.Request) {
 	}
 
 	if resourceHeader != "" {
-		path := req.URL.Path
+		path := req.URL.Opaque
 		matches := apiRegExp.FindStringSubmatch(path)
 		var resourceName string
 		if len(matches) == 2 {
@@ -42,9 +50,9 @@ func (r *HeaderRewriter) Rewrite(req *http.Request) {
 			resourceName = "unknown"
 		}
 
-		req.Header.Add(resourceHeader, resource)
+		req.Header.Add(resourceHeader, resourceName)
 
-		log.Printf("Adding resource header %s for %s", resource, path)
+		log.Printf("Adding resource header %s for %s", resourceName, path)
 	}
 }
 
