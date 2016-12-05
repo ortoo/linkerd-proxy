@@ -51,8 +51,6 @@ func (r *HeaderRewriter) Rewrite(req *http.Request) {
 		}
 
 		req.Header.Add(resourceHeader, "/"+resourceName)
-
-		log.Printf("Adding resource header %s for %s", resourceName, path)
 	}
 }
 
