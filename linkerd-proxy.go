@@ -12,8 +12,8 @@ import (
 	"github.com/vulcand/oxy/forward"
 )
 
-var apiMode = GetOpt("API_MODE", "")
-var apiRegExp = regexp.MustCompile("^/v2/(\\w+)")
+var resourceHeader = GetOpt("RESOURCE_HEADER", "")
+var apiRegExp = regexp.MustCompile("^/v[\\d.]+/(\\w+)")
 
 type HeaderRewriter struct {
 }
@@ -30,14 +30,21 @@ func (r *HeaderRewriter) Rewrite(req *http.Request) {
 			(strings.HasPrefix(lcName, "l5d-ctx-")) {
 			req.Header.Del(name)
 		}
+	}
 
-		if apiMode != "" {
-			path := req.URL.Path
-			matches := apiRegExp.FindStringSubmatch(path)
-			if len(matches) == 2 {
-				req.Header.Add("x-ortoo-api-resource", matches[1])
-			}
+	if resourceHeader != "" {
+		path := req.URL.Path
+		matches := apiRegExp.FindStringSubmatch(path)
+		var resourceName string
+		if len(matches) == 2 {
+			resourceName = matches[1]
+		} else {
+			resourceName = "unknown"
 		}
+
+		req.Header.Add(resourceHeader, resource)
+
+		log.Printf("Adding resource header %s for %s", resource, path)
 	}
 }
 
