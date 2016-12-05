@@ -6,15 +6,19 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/vulcand/oxy/forward"
 )
 
-type L5dHeaderRewriter struct {
+var apiMode = GetOpt("API_MODE", "")
+var apiRegExp = regexp.MustCompile("^/v2/(\\w+)")
+
+type HeaderRewriter struct {
 }
 
-func (r *L5dHeaderRewriter) Rewrite(req *http.Request) {
+func (r *HeaderRewriter) Rewrite(req *http.Request) {
 	// Get all headers
 	for name, _ := range req.Header {
 		// clear off 'l5d-ctx-*' 'l5d-dtab' 'l5d-sample'
@@ -25,6 +29,14 @@ func (r *L5dHeaderRewriter) Rewrite(req *http.Request) {
 			(lcName == "dtab-local") ||
 			(strings.HasPrefix(lcName, "l5d-ctx-")) {
 			req.Header.Del(name)
+		}
+
+		if apiMode != "" {
+			path := req.URL.Path
+			matches := apiRegExp.FindStringSubmatch(path)
+			if len(matches) == 2 {
+				req.Header.Add("x-ortoo-api-resource", matches[1])
+			}
 		}
 	}
 }
@@ -44,7 +56,7 @@ func main() {
 	// Forwards incoming requests to our linker strips out l5d-* headers, adds proper forwarding headers
 	keepHost := forward.PassHostHeader(true)
 
-	headerRewriter := forward.Rewriter(new(L5dHeaderRewriter))
+	headerRewriter := forward.Rewriter(new(HeaderRewriter))
 
 	fwd, err := forward.New(keepHost, headerRewriter)
 
